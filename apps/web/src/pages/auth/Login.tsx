@@ -18,7 +18,7 @@ export function LoginPage() {
   const [devError, setDevError] = useState<string | null>(null);
 
   if (initialized && session) {
-    return <Navigate to="/lab" replace />;
+    return <Navigate to="/galaxy" replace />;
   }
 
   const handleDevLogin = (e: React.FormEvent) => {
@@ -30,7 +30,7 @@ export function LoginPage() {
     }
     setSession(createDevSession(devEmail));
     setInitialized(true);
-    navigate('/lab', { replace: true });
+    navigate('/galaxy', { replace: true });
   };
 
   const showDevLogin = !isSupabaseConfigured && isDevAuthEnabled;

@@ -23,7 +23,7 @@ export function LoginForm() {
     try {
       setError(null);
       await login(data);
-      navigate('/lab', { replace: true });
+      navigate('/galaxy', { replace: true });
     } catch (authError) {
       const fallback = 'Invalid email or password';
       const message = authError instanceof Error && authError.message ? authError.message : fallback;

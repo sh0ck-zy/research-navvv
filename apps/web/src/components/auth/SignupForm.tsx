@@ -37,7 +37,7 @@ export function SignupForm() {
     try {
       setError(null);
       await signup(data);
-      navigate('/lab', { replace: true });
+      navigate('/galaxy', { replace: true });
     } catch (signupError) {
       const fallback = 'Signup failed. You may need to be invited to this pilot.';
       const message = signupError instanceof Error && signupError.message ? signupError.message : fallback;

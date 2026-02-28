@@ -7,7 +7,7 @@ export function SignupPage() {
   const session = useAuthStore((state) => state.session);
 
   if (initialized && session) {
-    return <Navigate to="/lab" replace />;
+    return <Navigate to="/galaxy" replace />;
   }
 
   return (
