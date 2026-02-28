@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --navvv-bg: #030812;
+  --navvv-bg-soft: #071321;
+  --navvv-panel: rgba(8, 19, 35, 0.72);
+  --navvv-panel-border: rgba(154, 184, 215, 0.24);
+  --navvv-text: #e8f0fc;
+  --navvv-muted: #93a9c6;
+  --navvv-accent: #2dd4bf;
+  --navvv-accent-soft: rgba(45, 212, 191, 0.24);
+  --navvv-warning: #f59e0b;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(circle at 14% -10%, rgba(37, 173, 255, 0.18), transparent 32%),
+    radial-gradient(circle at 100% 15%, rgba(56, 189, 248, 0.16), transparent 36%),
+    radial-gradient(circle at 60% 100%, rgba(45, 212, 191, 0.15), transparent 38%),
+    linear-gradient(165deg, var(--navvv-bg) 12%, var(--navvv-bg-soft) 100%);
+  color: var(--navvv-text);
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+}
+
+.dark body {
+  background:
+    radial-gradient(circle at 14% -10%, rgba(37, 173, 255, 0.2), transparent 32%),
+    radial-gradient(circle at 100% 15%, rgba(56, 189, 248, 0.16), transparent 36%),
+    radial-gradient(circle at 60% 100%, rgba(45, 212, 191, 0.15), transparent 38%),
+    linear-gradient(165deg, var(--navvv-bg) 12%, var(--navvv-bg-soft) 100%);
+  color: var(--navvv-text);
+}
+
+html,
+#root {
+  min-height: 100%;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Space Grotesk', 'IBM Plex Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+* {
+  box-sizing: border-box;
+}

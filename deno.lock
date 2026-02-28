@@ -1,0 +1,48 @@
+{
+  "version": "5",
+  "remote": {
+    "https://esm.sh/@supabase/supabase-js@2.49.1": "947c71e163ca8bb5b538eccb5ee86fbc8da6bcb916a861586db5fad1af4701bb",
+    "https://esm.sh/zod@3.23.8": "15e60c792ac21d4818f181671c7c74bf33bf7526d487dc524911e42785d8b5c2"
+  },
+  "workspace": {
+    "members": {
+      "apps/web": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@eslint/js@^9.9.1",
+            "npm:@hookform/resolvers@^3.3.4",
+            "npm:@supabase/supabase-js@^2.49.1",
+            "npm:@tanstack/react-query@^5.24.1",
+            "npm:@types/d3@^7.4.3",
+            "npm:@types/react-dom@^18.3.0",
+            "npm:@types/react@^18.3.5",
+            "npm:@types/three@~0.183.1",
+            "npm:@vitejs/plugin-react@^4.3.1",
+            "npm:autoprefixer@^10.4.18",
+            "npm:clsx@^2.1.0",
+            "npm:d3@^7.8.5",
+            "npm:eslint-plugin-react-hooks@^5.1.0-rc.0",
+            "npm:eslint-plugin-react-refresh@~0.4.11",
+            "npm:eslint@^9.9.1",
+            "npm:globals@^15.9.0",
+            "npm:lucide-react@0.344",
+            "npm:postcss@^8.4.35",
+            "npm:react-dom@^18.3.1",
+            "npm:react-dropzone@^14.2.3",
+            "npm:react-hook-form@^7.51.0",
+            "npm:react-router-dom@^6.22.3",
+            "npm:react@^18.3.1",
+            "npm:tailwind-merge@^2.2.1",
+            "npm:tailwindcss@^3.4.1",
+            "npm:three@0.180",
+            "npm:typescript-eslint@^8.3.0",
+            "npm:typescript@^5.5.3",
+            "npm:vite@^5.4.2",
+            "npm:zod@^3.22.4",
+            "npm:zustand@^4.5.1"
+          ]
+        }
+      }
+    }
+  }
+}
