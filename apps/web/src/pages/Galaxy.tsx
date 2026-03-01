@@ -148,6 +148,7 @@ export function GalaxyPage() {
           nodes={renderNodes}
           bridgesMode={bridgesMode}
           selectedNodeId={selectedNode?.id ?? null}
+          pointThreshold={3.6}
           onHoverChange={setHover}
           onNodeClick={setSelectedNode}
         />

@@ -13,6 +13,7 @@ interface GalaxyCanvasProps {
   nodes: GalaxyNode[];
   bridgesMode: boolean;
   selectedNodeId: string | null;
+  pointThreshold?: number;
   onHoverChange: (payload: HoverPayload | null) => void;
   onNodeClick: (node: GalaxyNode | null) => void;
 }
@@ -85,7 +86,14 @@ function resolveSize(node: GalaxyNode, selectedId: string | null) {
   return Math.max(2, node.size) * selectedBoost;
 }
 
-export function GalaxyCanvas({ nodes, bridgesMode, selectedNodeId, onHoverChange, onNodeClick }: GalaxyCanvasProps) {
+export function GalaxyCanvas({
+  nodes,
+  bridgesMode,
+  selectedNodeId,
+  pointThreshold = 3.2,
+  onHoverChange,
+  onNodeClick,
+}: GalaxyCanvasProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const onHoverRef = useRef(onHoverChange);
   const onClickRef = useRef(onNodeClick);
@@ -195,7 +203,7 @@ export function GalaxyCanvas({ nodes, bridgesMode, selectedNodeId, onHoverChange
     controls.maxDistance = 450;
 
     const raycaster = new THREE.Raycaster();
-    raycaster.params.Points = { threshold: 3.2 };
+    raycaster.params.Points = { threshold: pointThreshold };
 
     const pointerNdc = new THREE.Vector2();
     const reusableVector = new THREE.Vector3();
@@ -341,7 +349,7 @@ export function GalaxyCanvas({ nodes, bridgesMode, selectedNodeId, onHoverChange
       runtimeRef.current = null;
       mount.removeChild(renderer.domElement);
     };
-  }, [nodes]);
+  }, [nodes, pointThreshold]);
 
   return <div ref={mountRef} className="h-full w-full" />;
 }
