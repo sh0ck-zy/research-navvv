@@ -17,6 +17,13 @@ Research Navigator is a pilot implementation of an AI-assisted research workflow
 2. Install dependencies from repo root: `npm install`.
 3. Start web app: `npm run dev`.
 
+### Galaxy Demo Data (arXiv)
+
+- Build arXiv dataset for the galaxy: `make arxiv_demo`
+- Alias (same command): `make demo`
+- Use a local snapshot path: `DATASET_PATH=/absolute/path/to/arxiv-metadata-oai-snapshot.json make arxiv_demo`
+- Change sample size: `COUNT=5000 make arxiv_demo`
+
 ## Supabase Setup
 
 1. Create `/Users/joao/Projects/research-navvv/supabase/.env` from `/Users/joao/Projects/research-navvv/supabase/.env.example`.

@@ -8,9 +8,12 @@
    - `npm run dev`
 3. Build production bundle:
    - `npm run build`
-4. Regenerate sample galaxy data:
-   - `make demo`
-   - `SEED=123 make demo` (optional deterministic variation)
+4. Regenerate arXiv galaxy data:
+   - `make arxiv_demo`
+   - `DATASET_PATH=/absolute/path/to/arxiv-metadata-oai-snapshot.json make arxiv_demo`
+   - `SEED=123 COUNT=5000 make arxiv_demo`
+
+`make demo` is an alias of `make arxiv_demo`.
 
 ## Source of Truth
 
@@ -20,23 +23,32 @@
 ## Active Runtime Paths
 
 - Router: `apps/web/src/App.tsx`
-- Landing page: `apps/web/src/pages/Landing.tsx`
-- Galaxy page: `apps/web/src/pages/Galaxy.tsx`
-- Galaxy renderer/components: `apps/web/src/components/galaxy/*`
+- Main galaxy page: `apps/web/src/pages/GalaxyLanding.tsx`
+- Legacy wrapper route page: `apps/web/src/pages/Galaxy.tsx`
+- Galaxy shell/search/card UI: `apps/web/src/components/galaxy/GalaxyShell.tsx`, `GalaxySearch.tsx`, `PaperCard.tsx`
+- Galaxy renderer (Three-only): `apps/web/src/components/galaxy/GalaxyCanvas.tsx`
 - Galaxy data schema/loader: `apps/web/src/lib/galaxy/*`
-- Static demo dataset served by Vite: `apps/web/public/demo/nodes.json`
-- Demo dataset generator: `engine/build_demo.py`
-- Make target: `Makefile` (`demo`)
+- Queue store (localStorage): `apps/web/src/lib/store/queue.ts`
+- Static dataset served by Vite: `apps/web/public/demo/nodes.json`
+- arXiv data generator: `engine/arxiv_build.py`
+- Make targets: `Makefile` (`arxiv_demo`, `demo`)
 
 ## Route Map
 
-- `/` -> Landing
-- `/galaxy` -> Galaxy explorer
+- `/` -> Galaxy landing experience
+- `/galaxy` -> Galaxy landing experience (same page)
 - `/lab` -> Redirects to `/galaxy`
 - `/lab/papers/:paperId` -> Redirects to `/galaxy`
-- `/login`, `/signup` -> Existing auth pages (non-core path)
+- `/login`, `/signup` -> Existing auth pages
 
-## Legacy Archived Code
+## UI Extension Boundary
 
-- Non-core placeholder lab experience was moved to `archive/legacy-lab`.
-- Purpose: keep repo history while making current product path unambiguous.
+Antigravity should edit only UI-layer files:
+
+- `GalaxyShell.tsx`
+- `GalaxySearch.tsx`
+- `PaperCard.tsx`
+- `uiTokens.ts`
+- CSS (`index.css`)
+
+Three logic and camera behavior remain in `GalaxyCanvas.tsx`.

@@ -1,0 +1,14 @@
+{
+    "score": {
+        "background": 10,
+        "node_hierarchy": 10,
+        "color_palette": 10,
+        "spatial_distribution": 10,
+        "ui_minimalism": 10,
+        "typography": 10,
+        "motion": 10,
+        "detail_panel": 10
+    },
+    "violations": [],
+    "recommendations": []
+}

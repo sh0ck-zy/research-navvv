@@ -1,4 +1,4 @@
-import { GalaxyNodesFileSchema, type GalaxyNode } from './schema';
+import { GalaxyNodesFileSchema, RawGalaxyNodesFileSchema, type GalaxyNode, type RawGalaxyNode } from './schema';
 
 export type GalaxyLoadResult =
   | { status: 'success'; nodes: GalaxyNode[] }
@@ -13,6 +13,46 @@ function formatIssuePath(path: Array<string | number>) {
   return path
     .map((segment) => (typeof segment === 'number' ? `[${segment}]` : segment))
     .join('.');
+}
+
+function normalizeAuthors(value: RawGalaxyNode['authors']): string[] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    const compact = value.map((author) => author.trim()).filter((author) => author.length > 0);
+    return compact.length > 0 ? compact : undefined;
+  }
+
+  const split = value
+    .split(/,| and /gi)
+    .map((author) => author.trim())
+    .filter((author) => author.length > 0);
+
+  return split.length > 0 ? split : [value.trim()];
+}
+
+function normalizeNode(raw: RawGalaxyNode): GalaxyNode {
+  return {
+    id: raw.id,
+    title: raw.title,
+    year: raw.year,
+    category: raw.category ?? raw.primaryCategory,
+    authors: normalizeAuthors(raw.authors),
+    abstract: raw.abstract ?? raw.summary,
+    cluster: raw.cluster,
+    clusterLabel: raw.clusterLabel,
+    x: raw.x,
+    y: raw.y,
+    z: raw.z,
+    size: raw.size,
+    sizeBase: raw.sizeBase,
+    alphaBase: raw.alphaBase,
+    layer: raw.layer,
+    isBridge: raw.isBridge,
+    url: raw.url,
+  };
 }
 
 export async function loadGalaxyNodes(signal?: AbortSignal): Promise<GalaxyLoadResult> {
@@ -39,18 +79,28 @@ export async function loadGalaxyNodes(signal?: AbortSignal): Promise<GalaxyLoadR
     return { status: 'error', message: 'nodes.json is not valid JSON.' };
   }
 
-  const parsed = GalaxyNodesFileSchema.safeParse(payload);
-  if (!parsed.success) {
-    const first = parsed.error.issues[0];
+  const parsedRaw = RawGalaxyNodesFileSchema.safeParse(payload);
+  if (!parsedRaw.success) {
+    const first = parsedRaw.error.issues[0];
     return {
       status: 'error',
       message: `Invalid nodes.json at "${formatIssuePath(first.path)}": ${first.message}`,
     };
   }
 
-  if (parsed.data.length === 0) {
+  const normalized = parsedRaw.data.map(normalizeNode);
+  const parsedCanonical = GalaxyNodesFileSchema.safeParse(normalized);
+  if (!parsedCanonical.success) {
+    const first = parsedCanonical.error.issues[0];
+    return {
+      status: 'error',
+      message: `Invalid normalized nodes at "${formatIssuePath(first.path)}": ${first.message}`,
+    };
+  }
+
+  if (parsedCanonical.data.length === 0) {
     return { status: 'empty', nodes: [] };
   }
 
-  return { status: 'success', nodes: parsed.data };
+  return { status: 'success', nodes: parsedCanonical.data };
 }

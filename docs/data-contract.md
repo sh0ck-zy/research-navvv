@@ -9,16 +9,23 @@ This document defines the contract for `apps/web/public/demo/nodes.json`.
 ```json
 [
   {
-    "id": "node-000001",
-    "title": "Graph Retrieval for Vision-Language Models",
+    "id": "2403.01067",
+    "title": "Scaling Sparse Expert Models",
     "year": 2024,
-    "cluster": 3,
+    "category": "cs.LG",
+    "authors": ["Jane Doe", "John Roe"],
+    "abstract": "Sparse MoE models improve quality while controlling compute...",
+    "cluster": 0,
+    "clusterLabel": "Machine Learning",
     "x": 12.4,
     "y": -1.2,
     "z": 44.9,
-    "size": 4.2,
+    "size": 3.8,
+    "sizeBase": 1.7,
+    "alphaBase": 0.56,
+    "layer": "bright",
     "isBridge": false,
-    "url": "https://example.org/papers/node-000001"
+    "url": "https://arxiv.org/abs/2403.01067"
   }
 ]
 ```
@@ -28,35 +35,31 @@ This document defines the contract for `apps/web/public/demo/nodes.json`.
 - `id`: string, required, non-empty
 - `title`: string, required, non-empty
 - `year`: integer, optional
+- `category`: string, optional
+- `authors`: string array, optional
+- `abstract`: string, optional
 - `cluster`: integer, required
+- `clusterLabel`: string, optional
 - `x`: number, required
 - `y`: number, required
 - `z`: number, required
 - `size`: number, required, must be `> 0`
+- `sizeBase`: number, optional, must be `> 0`
+- `alphaBase`: number, optional, range `0..1`
+- `layer`: `dust | star | bright`, optional
 - `isBridge`: boolean, required
 - `url`: string URL, optional
 
-## Validation Behavior
+## Legacy Compatibility
 
-UI validates using Zod with `safeParse`.
+Loader normalizes legacy fields before validation:
 
-On invalid data, UI displays a friendly message:
-
-- `Invalid nodes.json at "<path>": <issue>`
-
-Example:
-
-- `Invalid nodes.json at "[0].cluster": Expected number, received string`
+- `summary` -> `abstract`
+- `primaryCategory` -> `category`
+- `authors` string -> `authors[]`
 
 ## Runtime States
 
 - Valid non-empty array -> render galaxy
-- Valid empty array -> show empty state (`No nodes found`)
+- Valid empty array -> show empty state
 - Invalid JSON / schema mismatch / fetch error -> show error state with retry
-
-## Common Errors
-
-- `cluster` as string instead of integer
-- `size` as `0` or negative
-- malformed `url`
-- top-level object instead of array

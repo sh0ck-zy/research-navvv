@@ -1,0 +1,15 @@
+{
+    "passes": [
+        "Search bar não é branca, é dark-glass",
+        "Background tem texture/grain subtil (não gradiente óbvio)",
+        "Dropdown tem 6 itens máx, com hierarquia visual",
+        "Nenhum elemento parece “debug” (Queue pill, labels, borders fortes)",
+        "PaperCard ocupa pouco, sem dominar",
+        "Botões são ghost/subtle",
+        "Tipografia pequena e elegante (sem headings enormes)",
+        "Nada de neon / glow agressivo",
+        "Primeira impressão: “produto premium”"
+    ],
+    "fails": [],
+    "recommendations": []
+}
