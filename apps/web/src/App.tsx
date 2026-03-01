@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { GalaxyBackground } from './components/layout/GalaxyBackground';
 import { useThemeSync } from './lib/hooks/useThemeSync';
 import { LandingPage } from './pages/Landing';
@@ -6,12 +6,13 @@ import { GalaxyPage } from './pages/Galaxy';
 import { LoginPage } from './pages/auth/Login';
 import { SignupPage } from './pages/auth/Signup';
 
-function App() {
-  useThemeSync();
+function AppShell() {
+  const location = useLocation();
+  const showBackground = !location.pathname.startsWith('/galaxy');
 
   return (
-    <BrowserRouter>
-      <GalaxyBackground />
+    <>
+      {showBackground ? <GalaxyBackground /> : null}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/galaxy" element={<GalaxyPage />} />
@@ -21,6 +22,16 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  useThemeSync();
+
+  return (
+    <BrowserRouter>
+      <AppShell />
     </BrowserRouter>
   );
 }
