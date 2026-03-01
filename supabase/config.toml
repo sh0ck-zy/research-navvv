@@ -1,0 +1,19 @@
+project_id = "research-navvv"
+
+[functions.pilot-signup]
+verify_jwt = false
+
+[functions.upload-paper]
+verify_jwt = true
+
+[functions.process-paper-parse]
+verify_jwt = false
+
+[functions.process-paper-enrich]
+verify_jwt = false
+
+[functions.process-paper-graph]
+verify_jwt = false
+
+[functions.retry-paper-processing]
+verify_jwt = true

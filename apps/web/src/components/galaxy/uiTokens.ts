@@ -1,0 +1,53 @@
+export const uiTokens = {
+  colors: {
+    bg: '#0b0d12',
+    fg: 'rgba(255,255,255,0.92)',
+    muted: 'rgba(255,255,255,0.62)',
+    muted2: 'rgba(255,255,255,0.42)',
+    hairline: 'rgba(255,255,255,0.10)',
+    glass: 'rgba(20,24,34,0.55)',
+    glass2: 'rgba(14,18,28,0.65)',
+    shadow: '0 18px 60px rgba(0,0,0,0.55)',
+    shellBg: 'rgba(9,12,18,0.52)',
+    cardBg: 'rgba(14,18,28,0.72)',
+    searchBg: 'rgba(20,24,34,0.55)',
+    searchText: 'rgba(255,255,255,0.92)',
+    searchMuted: 'rgba(255,255,255,0.42)',
+    accent: 'rgba(130,190,230,0.7)',
+    accentGlow: 'rgba(130,190,230,0.12)',
+    borderSoft: 'rgba(255,255,255,0.08)',
+    dropdownBg: 'rgba(14,18,28,0.88)',
+    rowHover: 'rgba(255,255,255,0.06)',
+    rowActive: 'rgba(130,190,230,0.10)',
+  },
+  radii: {
+    pill: 999,
+    lg: 16,
+    md: 12,
+  },
+  blur: {
+    shell: 16,
+    card: 18,
+    search: 16,
+  },
+  fontSize: {
+    hero: '14px',
+    body: '12px',
+    meta: '11px',
+    micro: '10px',
+  },
+  spacing: {
+    heroTop: '12%',
+    shellPadding: 24,
+    cardGap: 12,
+    cardMargin: 32,
+  },
+  search: {
+    maxWidth: 720,
+    height: 56,
+    dropdownMax: 6,
+  },
+  transition: {
+    fast: '150ms ease-out',
+  },
+} as const;
