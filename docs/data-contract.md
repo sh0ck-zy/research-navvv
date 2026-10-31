@@ -50,6 +50,12 @@ This document defines the contract for `apps/web/public/demo/nodes.json`.
 - `isBridge`: boolean, required
 - `url`: string URL, optional
 
+## Semantic Scope
+
+- `nodes.json` is **paper-only semantic data**.
+- Ambient/atmospheric particles are renderer-generated and are **not** stored in `nodes.json`.
+- Synthetic IDs such as `dust_*` are invalid in generated demo data.
+
 ## Legacy Compatibility
 
 Loader normalizes legacy fields before validation:
@@ -57,6 +63,7 @@ Loader normalizes legacy fields before validation:
 - `summary` -> `abstract`
 - `primaryCategory` -> `category`
 - `authors` string -> `authors[]`
+- legacy `isAmbient: true` nodes are dropped during load
 
 ## Runtime States
 

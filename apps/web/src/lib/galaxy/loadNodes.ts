@@ -55,6 +55,10 @@ function normalizeNode(raw: RawGalaxyNode): GalaxyNode {
   };
 }
 
+function isCanonicalPaperNode(node: GalaxyNode): boolean {
+  return node.id.trim().length > 0 && node.title.trim().length > 0;
+}
+
 export async function loadGalaxyNodes(signal?: AbortSignal): Promise<GalaxyLoadResult> {
   let response: Response;
 
@@ -88,7 +92,10 @@ export async function loadGalaxyNodes(signal?: AbortSignal): Promise<GalaxyLoadR
     };
   }
 
-  const normalized = parsedRaw.data.map(normalizeNode);
+  const normalized = parsedRaw.data
+    .filter((raw) => raw.isAmbient !== true)
+    .map(normalizeNode)
+    .filter(isCanonicalPaperNode);
   const parsedCanonical = GalaxyNodesFileSchema.safeParse(normalized);
   if (!parsedCanonical.success) {
     const first = parsedCanonical.error.issues[0];

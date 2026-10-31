@@ -52,3 +52,9 @@ Antigravity should edit only UI-layer files:
 - CSS (`index.css`)
 
 Three logic and camera behavior remain in `GalaxyCanvas.tsx`.
+
+## Semantic vs Ambient Layers
+
+- Semantic data source (`nodes.json`) contains real arXiv papers only.
+- Atmospheric background particles are generated procedurally inside `GalaxyCanvas.tsx`.
+- Search, selection, card, queue, and fly-to operate only on semantic paper nodes.

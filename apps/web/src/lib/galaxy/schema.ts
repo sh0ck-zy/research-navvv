@@ -4,7 +4,7 @@ export const GalaxyNodeLayerSchema = z.enum(['dust', 'star', 'bright']);
 
 export const GalaxyNodeSchema = z.object({
   id: z.string().min(1),
-  title: z.string(),
+  title: z.string().min(1),
   authors: z.array(z.string().min(1)).optional(),
   abstract: z.string().optional(),
   year: z.number().int().optional(),
@@ -20,7 +20,6 @@ export const GalaxyNodeSchema = z.object({
   layer: GalaxyNodeLayerSchema.optional(),
   isBridge: z.boolean(),
   url: z.string().optional(),
-  isAmbient: z.boolean().optional(),
 });
 
 export const RawGalaxyNodeSchema = z.object({

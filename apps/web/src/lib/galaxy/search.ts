@@ -37,7 +37,9 @@ function displayLabel(node: GalaxyNode) {
 }
 
 export function createGalaxySearchIndex(nodes: GalaxyNode[]): GalaxySearchIndex {
-  const documents = nodes.map((node) => ({
+  const searchableNodes = nodes.filter((node) => node.id.trim().length > 0 && node.title.trim().length > 0);
+
+  const documents = searchableNodes.map((node) => ({
     id: node.id,
     title: node.title,
     category: node.category ?? node.clusterLabel ?? '',
@@ -67,7 +69,7 @@ export function createGalaxySearchIndex(nodes: GalaxyNode[]): GalaxySearchIndex 
     ],
   }, fuseIndex);
 
-  return { nodes, documents, fuse };
+  return { nodes: searchableNodes, documents, fuse };
 }
 
 export function searchGalaxyNodes(index: GalaxySearchIndex, query: string, limit = 6): GalaxySearchResult[] {

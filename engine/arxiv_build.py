@@ -322,34 +322,47 @@ def shape_milky_way(points: list[tuple[float, float, float]], papers: list[Candi
   global_rng = random.Random(seed)
   phi1 = global_rng.uniform(0, math.pi * 2)
   phi2 = global_rng.uniform(0, math.pi * 2)
+  arm_phase = global_rng.uniform(0, math.pi * 2)
 
   for index, (x, y, z) in enumerate(points):
     paper = papers[index]
     rng = random.Random(f"{seed}:{paper.paper_id}:shape")
 
-    y_compressed = y * 0.12
+    # Strong vertical compression to keep the galactic band readable.
+    y_compressed = y * 0.055
     r = math.hypot(x, z)
-
-    w_disk = math.exp(-r / 0.70)
-    w_core = math.exp(-(r ** 2) / (2 * 0.12 ** 2))
-
-    sigma_y = 0.004 + 0.018 * r
-    y_final = y_compressed + rng.gauss(0.0, sigma_y)
-
     theta = math.atan2(z, x if abs(x) > 1e-6 else 1e-6)
 
-    r_prime = r + 0.03 * math.sin(2 * theta + phi1) + 0.015 * math.sin(4 * theta + phi2)
+    # Core bias keeps density at the center while preserving tails.
+    core_bias = math.exp(-(r ** 2) / (2 * 0.60 ** 2))
 
-    x_final = r_prime * math.cos(theta)
-    z_final = r_prime * math.sin(theta)
+    # Two subtle spiral filaments plus tiny local jitter.
+    arm_wave = 0.09 * math.sin(2.0 * theta + arm_phase + 0.34 * r)
+    harmonic_wave = 0.028 * math.sin(4.0 * theta + phi1)
+    filament_noise = 0.02 * math.sin(6.0 * theta + phi2 + r * 0.55)
+    radial_noise = rng.gauss(0.0, 0.008 + 0.014 * min(r, 3.0))
 
-    scale = 100.0
+    r_prime = max(0.02, r * (1.0 + arm_wave + harmonic_wave) + filament_noise + radial_noise - 0.18 * core_bias)
+    theta_prime = theta + 0.11 * math.sin(theta + phi1) * min(1.0, r / 2.5) + 0.07 * arm_wave
+
+    sigma_y = 0.002 + 0.010 * r + 0.004 * abs(arm_wave)
+    y_final = y_compressed + rng.gauss(0.0, sigma_y)
+    y_final *= 1.0 - 0.22 * core_bias
+
+    x_final = r_prime * math.cos(theta_prime)
+    z_final = r_prime * math.sin(theta_prime)
+
+    scale = 118.0
     x_scaled = x_final * scale
     y_scaled = y_final * scale
     z_scaled = z_final * scale
 
+    w_disk = math.exp(-r_prime / 1.05)
+    w_core = math.exp(-(r_prime ** 2) / (2 * 0.18 ** 2))
+    w_band = max(0.0, 1.0 - abs(y_final) * 2.2)
+
     shaped.append({"x": x_scaled, "y": y_scaled, "z": z_scaled})
-    weights.append(0.75 * w_disk + 1.35 * w_core)
+    weights.append(0.62 * w_disk + 1.55 * w_core + 0.22 * w_band)
 
   return shaped, weights
 
@@ -398,8 +411,8 @@ def build_nodes(papers: list[CandidatePaper], seed: int) -> list[dict[str, objec
   ranked_indices = sorted(range(len(papers)), key=lambda i: normalized_weights[i], reverse=True)
   
   n_papers = len(papers)
-  bright_cutoff = int(n_papers * 0.02)
-  star_cutoff = bright_cutoff + int(n_papers * 0.18)
+  bright_cutoff = max(1, int(round(n_papers * 0.06)))
+  star_cutoff = min(n_papers, bright_cutoff + int(round(n_papers * 0.28)))
 
   layer_assignment = [""] * n_papers
   for rank, original_index in enumerate(ranked_indices):
@@ -417,14 +430,14 @@ def build_nodes(papers: list[CandidatePaper], seed: int) -> list[dict[str, objec
     layer = layer_assignment[index]
 
     if layer == "dust":
-      alpha_base = rng.uniform(0.02, 0.06)
-      size_base = rng.uniform(0.35, 0.65)
+      alpha_base = rng.uniform(0.10, 0.22)
+      size_base = rng.uniform(0.45, 0.90)
     elif layer == "star":
-      alpha_base = rng.uniform(0.08, 0.18)
-      size_base = rng.uniform(0.70, 1.10)
+      alpha_base = rng.uniform(0.24, 0.42)
+      size_base = rng.uniform(0.95, 1.55)
     else:
-      alpha_base = rng.uniform(0.22, 0.42)
-      size_base = rng.uniform(1.25, 2.25)
+      alpha_base = rng.uniform(0.50, 0.82)
+      size_base = rng.uniform(1.80, 3.20)
 
     coords = shaped[index]
 
@@ -449,51 +462,6 @@ def build_nodes(papers: list[CandidatePaper], seed: int) -> list[dict[str, objec
             "url": f"https://arxiv.org/abs/{paper.paper_id}",
         }
     )
-
-  N_dust_extra = len(papers) * 6
-  Rmax = 350.0
-
-  for i in range(N_dust_extra):
-     rng = random.Random(f"{seed}:dust:{i}")
-     theta = rng.uniform(0, 2 * math.pi)
-     r_norm = (rng.random() ** 2.4)
-     r = r_norm * Rmax
-     
-     r_unscaled = r / 100.0
-     sigma_y = 0.004 + 0.018 * r_unscaled
-     y_unscaled = rng.gauss(0.0, sigma_y)
-     
-     x = r * math.cos(theta)
-     z = r * math.sin(theta)
-     y = y_unscaled * 100.0
-     
-     alpha_base = rng.uniform(0.02, 0.06)
-     size_base = rng.uniform(0.30, 0.65)
-     
-     cluster_index = rng.randrange(len(CLUSTER_SPECS))
-     
-     nodes.append(
-         {
-             "id": f"dust_{i}",
-             "title": "",
-             "year": 0,
-             "category": CLUSTER_SPECS[cluster_index].categories[0],
-             "authors": [],
-             "abstract": "",
-             "cluster": cluster_index,
-             "clusterLabel": CLUSTER_SPECS[cluster_index].label,
-             "x": round(x, 4),
-             "y": round(y, 4),
-             "z": round(z, 4),
-             "size": round(size_base, 3),
-             "sizeBase": round(size_base, 3),
-             "alphaBase": round(alpha_base, 3),
-             "layer": "dust",
-             "isBridge": False,
-             "url": "",
-             "isAmbient": True
-         }
-     )
 
   return nodes
 

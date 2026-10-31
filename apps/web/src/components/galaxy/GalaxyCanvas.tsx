@@ -17,11 +17,18 @@ export interface FlyToRequest {
   source: 'search' | 'ui';
 }
 
+interface AmbientConfig {
+  enabled: boolean;
+  seed: number;
+  count: number;
+}
+
 interface GalaxyCanvasProps {
   nodes: GalaxyNode[];
   bridgesMode?: boolean;
   selectedNodeId?: string | null;
   flyToRequest?: FlyToRequest | null;
+  ambient?: AmbientConfig;
   pointThreshold?: number;
   onHoverChange: (payload: HoverPayload | null) => void;
   onNodeClick: (node: GalaxyNode | null) => void;
@@ -66,6 +73,7 @@ const K_NEIGHBORS = 24;
 const FLY_DURATION_MS = 1500;
 const FLY_SETTLE_MS = 200;
 const FLY_DEBOUNCE_MS = 80;
+const DEFAULT_AMBIENT: AmbientConfig = { enabled: true, seed: 42, count: 3200 };
 
 const VERTEX_SHADER = `
 attribute float aSize;
@@ -90,13 +98,13 @@ varying float vAlpha;
 
 void main() {
   vec2 uv = gl_PointCoord - vec2(0.5);
-  float distsq = dot(uv, uv);
-  
-  // Discard fragments outside the circle
-  if (distsq > 0.25) discard;
+  float dist = length(uv) * 2.0;
+  if (dist > 1.0) discard;
 
-  // Gaussian falloff for a soft circle
-  float alpha = exp(-distsq * 12.0) * vAlpha;
+  // Soft "core + halo" profile to avoid square-looking points.
+  float core = smoothstep(0.44, 0.0, dist);
+  float halo = smoothstep(1.0, 0.24, dist);
+  float alpha = (core * 0.88 + halo * 0.42) * vAlpha;
   gl_FragColor = vec4(vColor, alpha);
 }
 `;
@@ -113,6 +121,17 @@ function clusterColor(cluster: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function createSeededRng(seed: number) {
+  let state = seed >>> 0;
+
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 function easeInOutCubic(value: number) {
@@ -149,7 +168,7 @@ function resolveBaseSize(node: GalaxyNode) {
 
 function resolveBaseAlpha(node: GalaxyNode) {
   if (typeof node.alphaBase === 'number') {
-    return clamp(node.alphaBase, 0.03, 1);
+    return clamp(node.alphaBase, 0.05, 1);
   }
 
   if (node.layer === 'dust') {
@@ -161,6 +180,67 @@ function resolveBaseAlpha(node: GalaxyNode) {
   }
 
   return 0.36;
+}
+
+function buildAmbientField(config: AmbientConfig) {
+  const count = Math.max(0, Math.floor(config.count));
+  if (!config.enabled || count <= 0) {
+    return null;
+  }
+
+  const rand = createSeededRng(config.seed);
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const alphas = new Float32Array(count);
+
+  for (let i = 0; i < count; i += 1) {
+    const i3 = i * 3;
+    const radial = Math.pow(rand(), 1.72) * 360;
+    const branchSign = rand() < 0.5 ? -1 : 1;
+    const thetaBase = rand() * Math.PI * 2;
+    const thetaSpiral = thetaBase + branchSign * (0.24 + radial * 0.0027);
+    const theta = thetaSpiral + 0.11 * Math.sin(thetaBase * 2.0 + radial * 0.021);
+
+    const filamentJitter = (rand() - 0.5) * (3.2 + radial * 0.012);
+    const x = (radial + filamentJitter) * Math.cos(theta);
+    const z = (radial + filamentJitter) * Math.sin(theta);
+
+    const bandHalfHeight = 5.8 + radial * 0.024;
+    const y = (rand() - 0.5) * bandHalfHeight + (rand() - 0.5) * 1.2;
+
+    positions[i3] = x;
+    positions[i3 + 1] = y;
+    positions[i3 + 2] = z;
+
+    const tint = 0.84 + rand() * 0.16;
+    colors[i3] = 0.58 * tint;
+    colors[i3 + 1] = 0.66 * tint;
+    colors[i3 + 2] = 0.94 * tint;
+
+    sizes[i] = 0.32 + Math.pow(rand(), 1.35) * 0.88;
+    alphas[i] = 0.02 + Math.pow(rand(), 0.72) * 0.08;
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+  geometry.setAttribute('aAlpha', new THREE.BufferAttribute(alphas, 1));
+
+  const material = new THREE.ShaderMaterial({
+    vertexShader: VERTEX_SHADER,
+    fragmentShader: FRAGMENT_SHADER,
+    transparent: true,
+    depthWrite: false,
+    vertexColors: true,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const points = new THREE.Points(geometry, material);
+  points.frustumCulled = false;
+
+  return { geometry, material, points };
 }
 
 function distanceSq(positions: Float32Array, a: number, b: number) {
@@ -190,6 +270,7 @@ function computeKNearestNeighbors(positions: Float32Array, selectedIndex: number
 
 function applyVisualState(runtime: RuntimeState, bridgesMode: boolean, selectedNodeId: string | null) {
   const selectedIndex = selectedNodeId ? runtime.idToIndex.get(selectedNodeId) ?? -1 : -1;
+  const hasSelection = selectedIndex >= 0;
   const neighborIndexes = selectedIndex >= 0 ? computeKNearestNeighbors(runtime.positions, selectedIndex, K_NEIGHBORS) : new Set<number>();
 
   for (let i = 0; i < runtime.nodes.length; i += 1) {
@@ -203,21 +284,21 @@ function applyVisualState(runtime: RuntimeState, bridgesMode: boolean, selectedN
     let size = baseSize;
     let alpha = baseAlpha;
 
-    if (selected) {
-      size = baseSize * 1.3;
-      alpha = baseAlpha + 0.25;
-    } else if (neighbor) {
-      alpha = baseAlpha + 0.1;
-    } else {
-      alpha = baseAlpha - 0.15;
+    if (hasSelection && selected) {
+      size = baseSize * 1.38;
+      alpha = baseAlpha + 0.28;
+    } else if (hasSelection && neighbor) {
+      alpha = baseAlpha + 0.12;
+    } else if (hasSelection) {
+      alpha = baseAlpha - 0.07;
     }
 
     if (bridgesMode && !selected && !neighbor) {
       alpha += node.isBridge ? 0.04 : -0.06;
     }
 
-    runtime.sizeAttr.setX(i, clamp(size, 0.55, 5.5));
-    runtime.alphaAttr.setX(i, clamp(alpha, 0.05, 1));
+    runtime.sizeAttr.setX(i, clamp(size, 0.55, 6.4));
+    runtime.alphaAttr.setX(i, clamp(alpha, 0.06, 1));
   }
 
   runtime.sizeAttr.needsUpdate = true;
@@ -229,11 +310,16 @@ export function GalaxyCanvas({
   bridgesMode = false,
   selectedNodeId = null,
   flyToRequest = null,
+  ambient = DEFAULT_AMBIENT,
   pointThreshold = 3.2,
   onHoverChange,
   onNodeClick,
   onFlyToComplete,
 }: GalaxyCanvasProps) {
+  const ambientConfig = ambient ?? DEFAULT_AMBIENT;
+  const ambientEnabled = ambientConfig.enabled;
+  const ambientSeed = ambientConfig.seed;
+  const ambientCount = ambientConfig.count;
   const mountRef = useRef<HTMLDivElement | null>(null);
   const onHoverRef = useRef(onHoverChange);
   const onClickRef = useRef(onNodeClick);
@@ -343,7 +429,7 @@ export function GalaxyCanvas({
     const scene = new THREE.Scene();
 
     if (MILKY_WAY_MODE) {
-      scene.fog = new THREE.FogExp2(0x050508, 0.0004); // Extremely subtle fog so it doesn't wash out the stars
+      scene.fog = new THREE.FogExp2(0x060a12, 0.00024);
     } else {
       scene.fog = new THREE.FogExp2(0x0b0d12, 0.00135);
     }
@@ -355,12 +441,15 @@ export function GalaxyCanvas({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.14;
     mount.appendChild(renderer.domElement);
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.42);
-    scene.add(ambient);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    scene.add(ambientLight);
 
-    const key = new THREE.PointLight(0xffffff, 0.58, 900);
+    const key = new THREE.PointLight(0xffffff, 0.62, 900);
     key.position.set(130, 120, 90);
     scene.add(key);
 
@@ -464,6 +553,11 @@ export function GalaxyCanvas({
     points.frustumCulled = false;
     scene.add(points);
 
+    const ambientField = buildAmbientField({ enabled: ambientEnabled, seed: ambientSeed, count: ambientCount });
+    if (ambientField) {
+      scene.add(ambientField.points);
+    }
+
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
@@ -484,18 +578,16 @@ export function GalaxyCanvas({
           map: texture,
           side: THREE.BackSide,
           transparent: true,
-          opacity: 0.28, // Low opacity so it acts as a backdrop, not a flat wallpaper
-          color: new THREE.Color(0xa0a0b0), // Desaturate and dim slightly
+          opacity: 0.2,
+          color: new THREE.Color(0xb9c8f0),
         });
 
         const skySphere = new THREE.Mesh(skyGeometry, skyMaterial);
-        // Rotate the sphere to align the milky way band diagonally
         skySphere.rotation.set(Math.PI / 4, -Math.PI / 6, 0);
         scene.add(skySphere);
       });
 
     }
-    // We rely on the python arxiv_build engine to inject ambient dust nodes.
 
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points = { threshold: pointThreshold };
@@ -533,8 +625,6 @@ export function GalaxyCanvas({
       const maxDistancePx = 18;
 
       for (let i = 0; i < runtime.nodes.length; i += 1) {
-        if (runtime.nodes[i].isAmbient) continue;
-
         const i3 = i * 3;
         reusableVector.set(runtime.positions[i3], runtime.positions[i3 + 1], runtime.positions[i3 + 2]);
         reusableVector.project(runtime.camera);
@@ -565,7 +655,7 @@ export function GalaxyCanvas({
       const intersections = raycaster.intersectObject(points, false);
       if (intersections.length > 0) {
         for (const hit of intersections) {
-          if (hit.index !== undefined && !runtime.nodes[hit.index].isAmbient) {
+          if (hit.index !== undefined) {
             return hit.index;
           }
         }
@@ -695,11 +785,13 @@ export function GalaxyCanvas({
       dustMaterial.dispose();
       starMaterial.dispose();
       brightMaterial.dispose();
+      ambientField?.geometry.dispose();
+      ambientField?.material.dispose();
       renderer.dispose();
       runtimeRef.current = null;
       mount.removeChild(renderer.domElement);
     };
-  }, [nodes, pointThreshold]);
+  }, [nodes, pointThreshold, ambientCount, ambientEnabled, ambientSeed]);
 
   return <div ref={mountRef} className="h-full w-full" />;
 }

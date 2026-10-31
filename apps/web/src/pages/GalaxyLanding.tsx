@@ -8,6 +8,7 @@ import { useQueueStore } from '../lib/store/queue';
 
 const LARGE_DATASET_LIMIT = 20_000;
 const SEARCH_DEBOUNCE_MS = 90;
+const GALAXY_AMBIENT = { enabled: true, seed: 42, count: 3200 } as const;
 
 export function GalaxyLandingPage() {
   const [loading, setLoading] = useState(true);
@@ -145,6 +146,7 @@ export function GalaxyLandingPage() {
           nodes={renderNodes}
           bridgesMode={false}
           selectedNodeId={selectedNode?.id ?? null}
+          ambient={GALAXY_AMBIENT}
           pointThreshold={3.4}
           flyToRequest={flyToRequest}
           onFlyToComplete={onFlyToComplete}

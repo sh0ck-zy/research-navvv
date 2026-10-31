@@ -63,11 +63,11 @@ h4 {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(1200px 700px at 50% 10%, rgba(255, 255, 255, 0.04), transparent 60%),
-    radial-gradient(1200px 900px at 50% 120%, rgba(0, 0, 0, 0.65), transparent 55%),
-    radial-gradient(900px 700px at 0% 50%, rgba(0, 0, 0, 0.55), transparent 55%),
-    radial-gradient(900px 700px at 100% 50%, rgba(0, 0, 0, 0.55), transparent 55%);
-  opacity: 0.9;
+    radial-gradient(1200px 700px at 50% 10%, rgba(180, 210, 255, 0.08), transparent 60%),
+    radial-gradient(1200px 900px at 50% 120%, rgba(0, 0, 0, 0.34), transparent 55%),
+    radial-gradient(900px 700px at 0% 50%, rgba(0, 0, 0, 0.24), transparent 55%),
+    radial-gradient(900px 700px at 100% 50%, rgba(0, 0, 0, 0.24), transparent 55%);
+  opacity: 0.35;
   z-index: 1;
 }
 
@@ -75,7 +75,7 @@ h4 {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.06;
+  opacity: 0.02;
   mix-blend-mode: overlay;
   z-index: 1;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
